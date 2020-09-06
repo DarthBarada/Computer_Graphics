@@ -1,0 +1,92 @@
+<html>
+   <body>
+       <h1>Кубик</h1>
+       <hr>
+       <canvas width='500' height='500' id='lab01'> </canvas>
+       <hr>
+       <h4>Используйте кнопки на клавиатуре, чтобы менять направление движения кубика</h3>
+       <script>
+
+            var canvas = document.getElementById('lab01');
+            var ctx = canvas.getContext('2d');
+
+            canvas.width = document.documentElement.scrollWidth;
+
+            var coord_x = 1;
+            var coord_y = 1;
+
+            var speed_x = 1;
+            var speed_y = 1;
+
+            var max_speed_x = 2;
+            var max_speed_y = 2;
+
+            var rectangle_width = 10;
+            var rectangle_height = 10;
+
+            setInterval(function(){
+                ctx.fillStyle="#000000";
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                ctx.fillRect(0+coord_x, 0+coord_y,rectangle_width,rectangle_height);  
+                
+                if (coord_x >= canvas.width-rectangle_width)
+                    {
+                        speed_x = -Math.abs(speed_x);  
+                    }
+                if (coord_x <= 0+rectangle_width)
+                    {
+                        speed_x = Math.abs(speed_x);  
+                    }
+                if (coord_y >= canvas.height-rectangle_height)
+                    {
+                        speed_y = -Math.abs(speed_y);  
+                    }
+                if (coord_y <= 0+rectangle_height)
+                    {
+                        speed_y = Math.abs(speed_y);  
+                    }
+                coord_y = coord_y+speed_y;
+                coord_x = coord_x+speed_x;
+
+                update_text();
+            },10);
+
+            function change_acceleration(e)
+                {
+                    switch(e.keyCode)
+                        {
+                            case 32:  // если нажата клавиша влево
+                                speed_x = 0;speed_y=0;
+                                break;
+                            case 37:  // если нажата клавиша влево
+                                if (speed_x > -max_speed_x)
+                                    {
+                                        speed_x = speed_x - 1;
+                                    }
+                                break;
+                            case 38:   // если нажата клавиша вверх
+                                if (speed_y > -max_speed_y)
+                                    {
+                                        speed_y = speed_y - 1;
+                                    }
+                                break;
+                            case 39:   // если нажата клавиша вправо
+                                if (speed_x < max_speed_x)
+                                    {
+                                        speed_x =speed_x + 1;
+                                    }
+                                break;
+                            case 40:   // если нажата клавиша вниз
+                                if (speed_y < max_speed_y)
+                                    {
+                                        speed_y = speed_y + 1;
+                                    }
+                                break;
+                        }
+                }
+            addEventListener("keydown", change_acceleration);
+
+       </script>
+
+   </body> 
+</html>
