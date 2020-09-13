@@ -1,7 +1,7 @@
 <html>
     <body>
-        <canvas width="500" , height="500" , id="layer_1"> </canvas>
-        <canvas width="500" , height="500" , id="layer_2"> </canvas>
+        <canvas width="500" , height="281" , id="layer_1"> </canvas>
+        <canvas width="500" , height="281" , id="layer_2"> </canvas>
 
         <script>
             var canvas = document.getElementById("layer_1");
@@ -10,36 +10,28 @@
             var canvas2 = document.getElementById("layer_2");
             var ctx2 = canvas2.getContext("2d");
             
-            let img_data = new ImageData(canvas.width,canvas.height)
-
-            let _average = 0;
-
-            function randomInteger(min, max) {
-            // получить случайное число от (min-0.5) до (max+0.5)
-            let rand = min - 0.5 + Math.random() * (max - min + 1);
-            return Math.round(rand);
-            }
-
-            for (var index = 0; index < img_data.data.length; index += 4)
-                {
-                    _average = img_data.data[index] + img_data.data[index+1] + img_data.data[index+2];
-                    
-                    img_data.data[index] = randomInteger(0, 255);
-                    img_data.data[index + 1] = randomInteger(0, 255);
-                    img_data.data[index + 2] = randomInteger(0, 255);
-                    img_data.data[index + 3] = 255;
+            let img = new Image();
+            img.crossOrigin = "anonymus";
+            img.src = "https://upload.wikimedia.org/wikipedia/commons/f/f9/Phoenicopterus_ruber_in_S%C3%A3o_Paulo_Zoo.jpg"; //Jerry meme.jpg
+            
+            let _average=0;
+            let img_data = new ImageData(1,1);
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height); 
+                img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                console.log(img_data);
+                for (var index = 0; index < img_data.data.length; index += 4)
+                    {
+                        _average = (img_data.data[index] + img_data.data[index+1] + img_data.data[index+2])/3;
+                        
+                        img_data.data[index] = _average;
+                        img_data.data[index + 1] = _average;
+                        img_data.data[index + 2] = _average;
+                        img_data.data[index + 3] = 255;
+                    }
+                ctx2.putImageData(img_data, 0, 0, 0, 0, canvas2.width, canvas2.height);
                 }
-            ctx.putImageData(img_data, 0, 0, 0, 0, canvas.width, canvas.height);
-            for (var index = 0; index < img_data.data.length; index += 4)
-                {
-                    _average = (img_data.data[index] + img_data.data[index+1] + img_data.data[index+2])/3;
-                    
-                    img_data.data[index] = _average;
-                    img_data.data[index + 1] = _average;
-                    img_data.data[index + 2] = _average;
-                    img_data.data[index + 3] = 255;
-                }
-            ctx2.putImageData(img_data, 0, 0, 0, 0, canvas2.width, canvas2.height);
+                
         </script>
     </body>
 </html>
