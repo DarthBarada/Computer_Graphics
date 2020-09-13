@@ -1,0 +1,36 @@
+<html>
+    <body>
+        <canvas width="500" , height="281" , id="layer_1"> </canvas>
+        <canvas width="500" , height="281" , id="layer_2"> </canvas>
+
+        <script>
+            var canvas = document.getElementById("layer_1");
+            var ctx = canvas.getContext("2d");
+    
+            var canvas2 = document.getElementById("layer_2");
+            var ctx2 = canvas2.getContext("2d");
+            
+            let img = new Image();
+            img.src = "Jerry meme.jpg"; //Jerry meme.jpg
+            
+            let _average=0;
+            
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                let img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                for (var index = 0; index < img_data.data.length; index += 4)
+                    {
+                        _average = (img_data.data[index] + img_data.data[index+1] + img_data.data[index+2])/3;
+                        
+                        img_data.data[index] = _average;
+                        img_data.data[index + 1] = _average;
+                        img_data.data[index + 2] = _average;
+                        img_data.data[index + 3] = 255;
+                    }
+                ctx2.putImageData(img_data, 0, 0, 0, 0, canvas2.width, canvas2.height);
+            }
+            
+        </script>
+    </body>
+</html>
