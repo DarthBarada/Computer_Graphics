@@ -15,6 +15,7 @@
 
 		let scale = 2;
 		
+		//Функция line_sec_1 рисует прямую в секторе от -45 до 45 градусов
 		function line_sec_1(ctx,x0,y0,x1,y1)
 			{
 				let deltax = Math.abs(x1-x0);
@@ -44,7 +45,7 @@
 							}
 					}
 			};
-		
+		//Функция line_sec_2 рисует прямую в секторе от -135 до -45 градусов
 		function line_sec_2(ctx,x0,y0,x1,y1)
 			{
 				let deltax = Math.abs(x1-x0);
@@ -79,10 +80,8 @@
 			{
 				ctx.fillStyle="#000000";
 
-				var k=(y1-y0)/(x1-x0); //
-
-				console.log("k: ",k);
-
+				var k=(y1-y0)/(x1-x0); // Вычисляем значение параметра наклона прямой
+				// Исходя из её значений, вызываем разные функции.
 				if ((k <= 1) && (k >= -1))
 					{
 						if (x1 < x0)
@@ -114,11 +113,6 @@
 					x0 = e.offsetX;
 					y0 = e.offsetY;
 					point_index = 1;
-					// DEBUG
-					console.log('Click: ' + x0 + ' / ' + y0);
-
-					ctx.fillStyle="#FF0000";
-					ctx.fillRect(x0,y0,1,1);
 				}
 			else
 				{
@@ -126,12 +120,6 @@
 					y1 = e.offsetY;
 					point_index = 0;
 					function_prepare_draw(ctx,x0,y0,x1,y1);
-					//line_sec_2(ctx,x0,y0,x1,y1);
-					// DEBUG
-					console.log('Cluck: ' + x1 + ' / ' + y1);
-
-					ctx.fillStyle="#FF0000";
-					ctx.fillRect(x1,y1,1,1);
 				}
 		});
 				
