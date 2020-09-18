@@ -1,0 +1,140 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+     </head>
+  <body>
+	  <canvas width='1000', height='1000', id='canvas_1'></canvas>
+	<script>
+		var canvas = document.getElementById('canvas_1');
+        var ctx = canvas.getContext('2d');
+		
+		let x0 = 10;
+		let y0 = 10;
+		let x1 = 160;
+		let y1 = 60;
+
+		let scale = 2;
+		
+		function line_sec_1(ctx,x0,y0,x1,y1)
+			{
+				let deltax = Math.abs(x1-x0);
+				let deltay = Math.abs(y1-y0);
+				let error = 0;
+				let deltaerr = (deltay + 1);
+
+				let y = y0;
+				let diry = y1 - y0;
+
+				if (diry > 0)
+					{
+						diry = 1;
+					}
+				if (diry < 0)
+					{
+						diry = -1;
+					}
+				for(let x = x0 ; x < x1 ; x++)
+					{
+						ctx.fillRect(x, y, 1*scale, 1*scale);
+						error = error + deltaerr;
+						if (error > (deltax + 1)) 
+							{
+								y = y + diry;
+             					error = error - (deltax + 1);
+							}
+					}
+			};
+		
+		function line_sec_2(ctx,x0,y0,x1,y1)
+			{
+				let deltax = Math.abs(x1-x0);
+				let deltay = Math.abs(y1-y0);
+				let error = 0;
+				let deltaerr = (deltax + 1);
+
+				let x = x0;
+				let dirx = x1 - x0;
+
+				if (dirx > 0)
+					{
+						dirx = 1;
+					}
+				if (dirx < 0)
+					{
+						dirx = -1;
+					}
+				for(let y = y0 ; y < y1 ; y++)
+					{
+						ctx.fillRect(x, y, 1*scale, 1*scale);
+						error = error + deltaerr;
+						if (error > (deltay + 1)) 
+							{
+								x = x + dirx;
+             					error = error - (deltay + 1);
+							}
+					}
+			};
+
+		function function_prepare_draw(ctx,x0,y0,x1,y1)
+			{
+				ctx.fillStyle="#000000";
+
+				var k=(y1-y0)/(x1-x0); //
+
+				console.log("k: ",k);
+
+				if ((k <= 1) && (k >= -1))
+					{
+						if (x1 < x0)
+							{
+								line_sec_1(ctx,x1,y1,x0,y0);
+							}	
+						else
+							{
+								line_sec_1(ctx,x0,y0,x1,y1);
+							}
+					}
+				if ((k < -1) || (k > 1))
+					{
+						if (y1 < y0)
+							{
+								line_sec_2(ctx,x1,y1,x0,y0);
+							}	
+						else
+							{
+								line_sec_2(ctx,x0,y0,x1,y1);
+							}
+					}
+			};
+		
+		let point_index = 0;
+		canvas.addEventListener('click',function(e){
+			if (point_index == 0)
+				{
+					x0 = e.offsetX;
+					y0 = e.offsetY;
+					point_index = 1;
+					// DEBUG
+					console.log('Click: ' + x0 + ' / ' + y0);
+
+					ctx.fillStyle="#FF0000";
+					ctx.fillRect(x0,y0,1,1);
+				}
+			else
+				{
+					x1 = e.offsetX;
+					y1 = e.offsetY;
+					point_index = 0;
+					function_prepare_draw(ctx,x0,y0,x1,y1);
+					//line_sec_2(ctx,x0,y0,x1,y1);
+					// DEBUG
+					console.log('Cluck: ' + x1 + ' / ' + y1);
+
+					ctx.fillStyle="#FF0000";
+					ctx.fillRect(x1,y1,1,1);
+				}
+		});
+				
+	</script>
+  </body>
+</html>
