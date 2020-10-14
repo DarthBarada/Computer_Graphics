@@ -1,0 +1,397 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+     </head>
+  <body>
+	  <canvas width='1000', height='1000', id='canvas_1'></canvas>
+	<script>
+		/*
+		* Класс для описания вектора / точки, имеет координаты x и y
+		*/
+		class Point
+			{
+				x = 0.0
+				y = 0.0
+
+				constructor(x = 0.0, y = 0.0)
+					{
+						this.x = x;
+						this.y = y;
+					}
+				
+				set_coordinates(x,y)
+					{
+						this.x = x;
+						this.y = y;
+					}
+				set_from_point(vec)
+					{
+						this.x = vec.x;
+						this.y = vec.y;
+					}
+				get x()
+					{
+						return x;
+					}
+				get y()
+					{
+						return y;
+					}
+				set x(x)
+					{
+						this.x = x;	
+					}
+				set y(y)
+					{
+						this.y = y;	
+					}
+				multiply_num(num)
+					{
+						this.x *= num;
+						this.y *= num;
+					}
+				Equal(p2)
+					{
+						if((this.x == p2.x)&&(this.y == p2.y))
+							{
+								return true;
+							}
+						return false;
+					}
+			}
+		/*
+		*	Функция скалярного умножения векторов, возвращает число
+		*/
+		function SMultiply(point_1,point_2)
+			{
+				return ((point_1.x*point_2.x) + (point_1.y*point_2.y));
+			}
+		/*
+		*	Функция векторного умножения векторов, возвращает число
+		*/
+		function VMultiply(point_1,point_2)
+			{
+				return ((point_1.x*point_2.x) + (point_1.y*point_2.y));
+			}
+		/*
+		*	Функция вычитания векторов, возвращает вектор
+		*/
+		function Subtraction(point_1 = new Point(),point_2 = new Point())
+			{
+				return new Point((point_1.x-point_2.x),(point_1.y-point_2.y))
+			}
+		/*
+		*	Функция сложения векторов, возвращает вектор
+		*/
+		function Add(point_1 = new Point(),point_2 = new Point())
+			{
+				return new Point((point_1.x+point_2.x),(point_1.y+point_2.y))
+			}
+		/*
+		* Класс описывающий линию, имеет начало, конец и нормали
+		* V0 - начальная точка
+		* V1 - точка конца
+		* N - нормаль
+		* vec - пространственный вектор
+		* e_vec - пространственный единичный вектор
+		*/
+		class Line
+			{
+				t0 = 0
+				t1 = 1
+				V0 = new Point()
+				V1 = new Point()
+				N = new Point()
+				vec = new Point()
+				e_vec = new Point()
+
+				constructor(start = new Point(), end = new Point())
+					{
+						this.V0.set_from_point(start);
+						this.V1.set_from_point(end);
+
+						var temp = Subtraction(end, start);
+						this.vec.set_coordinates(temp.x,temp.y);
+						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); // debug
+						this.e_vec.set_coordinates((temp.x/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))), (temp.y/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))));
+					}
+				set_coordinates(x0,y0,x1,y1)
+					{
+						this.V0.set_coordinates(x0,y0);
+						this.V1.set_coordinates(x1,y1);
+
+						var temp = Subtraction(this.V1, this.V0);
+						this.vec = temp;
+						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); // debug
+						this.e_vec.set_coordinates((temp.x/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))), (temp.y/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))));
+					}
+			}	
+		/*
+		* Polygon - класс созданный для рисования многоугольника
+		* 
+		* Функции:
+		* - check() - проверяет многоугольник на выпулость
+		* - draw_polygon - функция для рисования полигона
+		* - end_polygon - функция завершения рисования полигона (если надобность нужна)
+		*/
+		class Polygon
+			{
+				begin_point = new Point()
+				last_point = new Point()
+				started = false
+				ended = false
+				edges = []
+				count_edges = 0;
+
+
+				/*
+				* Функция вычисления внутренней нормали к стороне многоугольника
+				* Рекомендации: использовать в конце построения
+				*/
+				compute_normals()
+					{
+						for(let index = 0; index < this.count_edges;index++)
+							{
+
+								let n = new Point((-1 * (this.edges[index].e_vec.y/(this.edges[index].e_vec.x + 0.000001))),1)
+								let vec;
+								if (index == (this.count_edges - 1))
+									{
+										vec = new Line(this.edges[index].V0,this.edges[0].V1);
+									}
+								else
+									{
+										vec = new Line(this.edges[index].V0,this.edges[index + 1].V1);
+									}
+								if (!(SMultiply(n,vec.vec) > 0))
+									{
+										n.multiply_num(-1);
+									}
+								this.edges[index].N = n;
+								//console.log(vec," | ",this.edges[index].N, " | ", n); // debug
+							}	
+					}
+				/*
+				* Функция проверки выпуклости многоугольника. Возвращает true, если многоугольник выпуклый, иначе - false
+				*/
+				check()
+					{
+						let z = ((this.edges[this.count_edges - 1].V1.x - this.edges[this.count_edges - 1].V0.x)*((this.edges[0].V1.y - this.edges[0].V0.y))) - ((this.edges[this.count_edges - 1].V1.y - this.edges[this.count_edges - 1].V0.y)*((this.edges[0].V1.x - this.edges[0].V0.x)));
+						let zi = 0;
+						for(let index = 1; index < this.count_edges;index++)	
+							{
+								zi = ((this.edges[index - 1].V1.x - this.edges[index - 1].V0.x)*((this.edges[index].V1.y - this.edges[index].V0.y))) - ((this.edges[index - 1].V1.y - this.edges[index - 1].V0.y)*((this.edges[index].V1.x - this.edges[index].V0.x)));
+								if(zi*z < 0)
+									{
+										alert("Многоугольник не выпуклый!");
+										location.reload(); // перезагрузка страницы, убрать если нужна другая реализация
+										return false;
+									}
+							}
+						return true;
+					}
+
+				draw_polygon(ctx,x,y)
+					{
+						if(!this.ended)
+							{
+								if(!this.started)
+									{
+										this.begin_point.x = x;
+										this.begin_point.y = y;
+
+										this.last_point.x = this.begin_point.x;
+										this.last_point.y = this.begin_point.y;
+
+										this.started = true;
+									}
+								else
+									{
+										// Если мы хотим соединить конец и начало, то проверяем на дистанцию, если x,y находятся на удалении 10 пикслей, то соединяем
+										if ((Math.abs(x - this.begin_point.x) < 20) && (Math.abs(y - this.begin_point.y) < 20))
+											{
+												Draw_Line(ctx,this.last_point.x,this.last_point.y,this.begin_point.x,this.begin_point.y);
+
+												this.edges.push(new Line(this.last_point,this.begin_point));
+												this.ended = true;
+
+												this.last_point.x = this.begin_point.x;
+												this.last_point.y = this.begin_point.y;
+
+												this.count_edges++;
+
+												this.check();
+												this.compute_normals();
+											}
+										else
+											{
+												Draw_Line(ctx,this.last_point.x,this.last_point.y,x,y);
+
+												this.edges.push(new Line(this.last_point,new Point(x,y)));
+
+												this.last_point.x = x;
+												this.last_point.y = y;
+												this.count_edges++;
+											}
+									}
+							}
+						//console.log(this.begin_point.x,this.begin_point.y, " | ",this.last_point.x,this.last_point.y," | ",this.started, " | ",this.ended);
+					}				
+				
+				end_polygon(ctx)
+					{
+						if(!this.ended)
+							{
+								Draw_Line(ctx,this.last_point._x,this.last_point._y,x,y);
+
+								this.edges.push(new Line(this.last_point,this.begin_point));
+								this.ended = true;
+
+								this.last_point.x = this.begin_point.x;
+								this.last_point.y = this.begin_point.y;
+
+								this.count_edges++;
+
+								this.check();
+								this.compute_normals();
+							}	
+					}
+				
+			}
+	</script>
+	<script>
+		var canvas = document.getElementById('canvas_1');
+        var ctx = canvas.getContext('2d');
+		
+		let x0 = 10;
+		let y0 = 10;
+		let x1 = 160;
+		let y1 = 60;
+		let CurrentLine = new Line();
+
+		let scale = 2;
+		let drawing_polygon = true;
+		
+		function Draw_Line(ctx,x0,y0,x1,y1)
+			{
+				let dy = Math.abs(y1-y0);
+				let dx = Math.abs(x1-x0);
+
+				let dmax = Math.max(dx,dy);
+				let dmin = Math.min(dx,dy);
+
+				let xdir = 1;
+				let ydir = 1;
+
+				if(x1<x0) xdir = -1;
+				if(y1<y0) ydir = -1;
+
+				let eps = 0; 
+				let k = 2*dmin;
+
+				if(dy <= dx)
+					{
+						let y = y0;
+						for(let x=x0; x*xdir<=x1*xdir;x+=xdir)
+							{
+								ctx.fillRect(x,y,1*scale,1*scale);
+								eps = eps+k;
+								if(eps > dmax)
+									{
+										y += ydir;
+										eps = eps - 2*dmax;
+									}
+							}	
+					}
+				else
+					{
+						let x = x0;
+						for(let y=y0; y*ydir<=y1*ydir;y+=ydir)
+							{
+								ctx.fillRect(x,y,1*scale,1*scale);
+								eps = eps+k;
+								if(eps > dmax)
+									{
+										x += xdir;
+										eps = eps - 2*dmax;
+									}
+							}	
+					}
+			}
+		
+		let point_index = 0;
+		let poly = new Polygon();
+		let t = [];
+		canvas.addEventListener('click',function(e){
+			if (!poly.ended)
+				{
+					poly.draw_polygon(ctx,e.offsetX,e.offsetY);
+				}
+			else
+				{
+					if (point_index == 0)
+						{
+							x0 = e.offsetX;
+							y0 = e.offsetY;
+							point_index = 1;
+							console.log(poly);
+						}
+					else
+						{
+							x1 = e.offsetX;
+							y1 = e.offsetY;
+							point_index = 0;
+
+							CurrentLine.set_coordinates(x0,y0,x1,y1);
+							console.log("CurrentLine: ",CurrentLine);
+							for(let index = 0; index < poly.count_edges;index++)
+								{
+									let Pi = SMultiply(poly.edges[index].N, CurrentLine.vec);
+									let fi = poly.edges[index].V1;
+									let wi = Subtraction(CurrentLine.V0,fi);
+									let Qi = SMultiply(poly.edges[index].N,wi);
+
+									let t = -1*(Qi/Pi);
+
+									if(Pi < 0)
+										{
+											if(t > CurrentLine.t0 && t < CurrentLine.t1)
+												{
+													CurrentLine.t1 = t;
+												}
+											else 
+												{
+													continue;
+												}
+										}
+									else if (Pi > 0)
+										{
+											if(t > CurrentLine.t0 && t < CurrentLine.t1)
+												{
+													CurrentLine.t0 = t;
+												}
+											else 
+												{
+													continue;
+												}
+										}
+								}
+							let temp_point = Add(CurrentLine.vec);
+							temp_point.multiply_num(CurrentLine.t0)
+							let V0 = Add(CurrentLine.V0,temp_point);
+
+							temp_point = Add(CurrentLine.vec);
+							temp_point.multiply_num(CurrentLine.t1)
+							let V1 = Add(CurrentLine.V0,temp_point);
+							console.log(CurrentLine," | ",temp_point);
+							CurrentLine = new Line(V0,V1);
+							ctx.fillStyle="#00FF00";
+							Draw_Line(ctx,CurrentLine.V0.x,CurrentLine.V0.y,CurrentLine.V1.x,CurrentLine.V1.y);
+							ctx.fillStyle="#000000";
+							// console.log(CurrentLine); // debug
+						}
+				}
+		});				
+	</script>
+  </body>
+</html>
