@@ -263,7 +263,6 @@
 		let CurrentLine = new Line();
 
 		let scale = 2;
-		let drawing_polygon = true;
 		
 		function Draw_Line(ctx,x0,y0,x1,y1)
 			{
@@ -314,7 +313,6 @@
 		
 		let point_index = 0;
 		let poly = new Polygon();
-		let t = [];
 		canvas.addEventListener('click',function(e){
 			if (!poly.ended)
 				{
@@ -327,7 +325,7 @@
 							x0 = e.offsetX;
 							y0 = e.offsetY;
 							point_index = 1;
-							console.log(poly);
+							//console.log(poly); // debug
 						}
 					else
 						{
@@ -336,7 +334,7 @@
 							point_index = 0;
 
 							CurrentLine.set_coordinates(x0,y0,x1,y1);
-							console.log("CurrentLine: ",CurrentLine);
+							// console.log("CurrentLine: ",CurrentLine); // debug
 							for(let index = 0; index < poly.count_edges;index++)
 								{
 									let Pi = SMultiply(poly.edges[index].N, CurrentLine.vec);
@@ -376,7 +374,7 @@
 							temp_point = Add(CurrentLine.vec);
 							temp_point.multiply_num(CurrentLine.t1)
 							let V1 = Add(CurrentLine.V0,temp_point);
-							console.log(CurrentLine," | ",temp_point);
+							//(CurrentLine," | ",temp_point); // debug
 							CurrentLine = new Line(V0,V1);
 							ctx.fillStyle="#00FF00";
 							Draw_Line(ctx,CurrentLine.V0.x,CurrentLine.V0.y,CurrentLine.V1.x,CurrentLine.V1.y);
