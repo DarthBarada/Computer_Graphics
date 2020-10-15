@@ -251,18 +251,6 @@
 			}
 	</script>
     <script>
-        function rgbToHex(r, g, b) 
-            { 
-                if (r > 255 || g > 255 || b > 255) 
-                throw "Invalid color component"; 
-                return ((r << 16) | (g << 8) | b).toString(16); 
-            } 
-        function getPixelColor(ctx,fx, fy) 
-            { 
-                var p = ctx.getImageData(fx, fy, 1, 1).data; 
-                var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6); 
-                return hex; 
-            }
         function Draw_Line(ctx,x0,y0,x1,y1)
 			{
 				let dy = Math.abs(y1-y0);
