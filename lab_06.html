@@ -327,12 +327,12 @@
 
                     stack.push(CurrentPoint);
                     counter++;
-
+                    // Пока стек с вершинами не пустой 
                     while(counter != 0)
                         {
-                            CurrentPoint = stack.pop();
+                            CurrentPoint = stack.pop(); // Берём верхнюю
                             counter--;
-                            
+                            // Вычисляем начало отрезка по x
                             let X_min = CurrentPoint.x;
                             p = ctx.getImageData(X_min-1, CurrentPoint.y, 1, 1).data;
                             while((CurrentColor[0] == p[0]) && (CurrentColor[1] == p[1]) && (CurrentColor[2] == p[2]) && (CurrentColor[3] == p[3]))
@@ -340,6 +340,7 @@
                                     X_min--;
                                     p = ctx.getImageData(X_min-1,CurrentPoint.y, 1, 1).data;
                                 }
+                            // Вычисляем конец отрезка по x
                             let X_max = CurrentPoint.x;
                             p = ctx.getImageData(X_max + 1, CurrentPoint.y, 1, 1).data;
                             while((CurrentColor[0]==p[0])&&(CurrentColor[1]==p[1])&&(CurrentColor[2]==p[2])&&(CurrentColor[3]==p[3]))
@@ -349,7 +350,7 @@
                                 }
                             scale = 1;
                             ctx.fillStyle = "#FF0000";
-                            Draw_Line(ctx,X_min,CurrentPoint.y,X_max,CurrentPoint.y);
+                            Draw_Line(ctx,X_min,CurrentPoint.y,X_max,CurrentPoint.y); // Рисуем линию
                             ctx.fillStyle = "#000000";
                             let flag = 1;
 
