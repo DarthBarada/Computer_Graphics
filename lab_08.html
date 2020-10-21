@@ -1,0 +1,117 @@
+<html>
+    <head>
+		<meta charset='utf-8'>
+		<input type="file" id="fileInput" multiple="false" onchange="readFile(this)"><br>
+		<h5 id="angles"></h5>
+		<script type="text/javascript" src="./3d_lib.js"></script>
+     </head>
+  <body>
+	<canvas width="500", height="500", id="canvas"></canvas>
+    <script>
+		var canvas = document.getElementById("canvas");
+		let angles = document.getElementById("angles");
+        var ctx = canvas.getContext("2d");
+		let scale = 2;
+		let step = 1;
+		let enable_rotation = false;		
+		let scene = new Scene();
+
+		let alpha = 180;
+		let beta = 0.0;
+		let gamma = 0.0;
+
+		function readFile(input) 
+			{
+				let file = input.files[0];
+
+				let reader = new FileReader();
+
+				reader.readAsText(file);
+
+				reader.onload = function() {
+						scene.objects  = obj_parse(reader.result);
+						ctx.clearRect(0,0,canvas.width, canvas.height);
+						scene.draw(ctx,250,250,(alpha/360)*2*Math.PI,(beta/360)*2*Math.PI,(gamma/360)*2*Math.PI);
+						enable_rotation = true
+					};
+
+				reader.onerror = function() {
+					console.log(reader.error);
+				};
+			}
+
+		setInterval(function(){
+				if (enable_rotation)
+					{
+						angles.innerHTML = "[ " + alpha + " | " + beta + " | "+ gamma + " ]";
+						ctx.clearRect(0,0,canvas.width, canvas.height);
+						gamma += step;
+						alpha += step;
+						if (alpha > 360 || alpha < 0)
+							{
+								alpha = Math.abs(alpha - 360)
+							}
+						if (beta > 360 || beta < 0)
+							{
+								beta = Math.abs(beta - 360)
+							}
+						if (gamma > 360 || gamma < 0)
+							{
+								gamma = Math.abs(gamma - 360)
+							}
+						scene.draw(ctx,250,250,(alpha/360)*2*Math.PI,(beta/360)*2*Math.PI,(gamma/360)*2*Math.PI);
+					}
+			},50);
+			
+		/*function change_acceleration(e) // Включить для управления клавишами
+			{
+				angles.innerHTML = "[ " + alpha + " | " + beta + " | "+ gamma + " ]";
+				ctx.clearRect(0,0,canvas.width, canvas.height);
+				if (enable_rotation)
+					{
+						switch(e.keyCode)
+							{
+								case 32:  // если нажат пробел
+									alpha = 0.0;
+									beta = 0.0;
+									gamma = 0.0;
+									break;
+								case 37:  // если нажата клавиша влево
+									gamma-=step;
+									if (gamma > 360 || gamma < 0)
+										{
+											gamma = Math.abs(gamma - 360)
+										}
+									break;
+								case 38:   // если нажата клавиша вверх
+									alpha+=step;
+									if (alpha > 360 || alpha < 0)
+										{
+											alpha = Math.abs(alpha - 360)
+										}
+									break;
+								case 39:   // если нажата клавиша вправо
+									gamma+=step;
+									if (gamma > 360 || gamma < 0)
+										{
+											gamma = Math.abs(gamma - 360)
+										}
+									break;
+								case 40:   // если нажата клавиша вниз
+									alpha-=step;
+									if (alpha > 360 || alpha < 0)
+										{
+											alpha = Math.abs(alpha - 360)
+										}
+									break;
+						}
+						
+						scene.draw(ctx,250,250,(alpha/360)*2*Math.PI,(beta/360)*2*Math.PI,(gamma/360)*2*Math.PI);
+					}
+			}
+		addEventListener("keydown", change_acceleration);*/
+		
+	</script>
+
+  </body>
+</html>

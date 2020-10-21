@@ -8,55 +8,48 @@
 		/*
 		* Класс для описания вектора / точки, имеет координаты x и y
 		*/
-		class Point
+		class Vertex
 			{
 				x = 0.0
 				y = 0.0
+				z = 0.0
 
-				constructor(x = 0.0, y = 0.0)
+				constructor(x = 0.0, y = 0.0, z = 0.0)
 					{
 						this.x = x;
 						this.y = y;
+						this.z = z;
 					}
 				
-				set_coordinates(x,y)
+				set_coordinates(x = 0.0,y = 0.0,z = 0.0)
 					{
 						this.x = x;
 						this.y = y;
+						this.z = z;
 					}
 				set_from_point(vec)
 					{
 						this.x = vec.x;
 						this.y = vec.y;
+						this.z = vec.z;
 					}
 				get x()
 					{
 						return x;
 					}
-				get y()
-					{
-						return y;
-					}
-				set x(x)
-					{
-						this.x = x;	
-					}
-				set y(y)
-					{
-						this.y = y;	
-					}
 				multiply_num(num)
 					{
 						this.x *= num;
 						this.y *= num;
+						this.z *= num;
 					}
                 module()
                     {
-                        return Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+                        return Math.sqrt(Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2));
                     }
 				Equal(p2)
 					{
-						if((this.x == p2.x)&&(this.y == p2.y))
+						if((this.x == p2.x)&&(this.y == p2.y)&&(this.z == p2.z))
 							{
 								return true;
 							}
@@ -68,7 +61,7 @@
 		*/
 		function SMultiply(point_1,point_2)
 			{
-				return ((point_1.x*point_2.x) + (point_1.y*point_2.y));
+				return ((point_1.x*point_2.x) + (point_1.y*point_2.y) + (point_1.z*point_2.z));
 			}
         /*
 		*	Функция вычисления векторного произведения векторов, возвращает число
@@ -82,16 +75,16 @@
 		/*
 		*	Функция вычитания векторов, возвращает вектор
 		*/
-		function Subtraction(point_1 = new Point(),point_2 = new Point())
+		function Subtraction(point_1 = new Vertex(),point_2 = new Vertex())
 			{
-				return new Point((point_1.x-point_2.x),(point_1.y-point_2.y))
+				return new Vertex((point_1.x-point_2.x),(point_1.y-point_2.y),(point_1.z-point_2.z))
 			}
 		/*
 		*	Функция сложения векторов, возвращает вектор
 		*/
-		function Add(point_1 = new Point(),point_2 = new Point())
+		function Add(point_1 = new Vertex(),point_2 = new Vertex())
 			{
-				return new Point((point_1.x+point_2.x),(point_1.y+point_2.y))
+				return new Vertex((point_1.x + point_2.x), (point_1.y + point_2.y),(point_1.z + point_2.z))
 			}
 		/*
 		* Класс описывающий линию, имеет начало, конец и нормали
@@ -105,35 +98,35 @@
 			{
 				t0 = 0
 				t1 = 1
-				V0 = new Point()
-				V1 = new Point()
-				N = new Point()
-				vec = new Point()
-				e_vec = new Point()
+				V0 = new Vertex()
+				V1 = new Vertex()
+				N = new Vertex()
+				vec = new Vertex()
+				e_vec = new Vertex()
 
-				constructor(start = new Point(), end = new Point())
+				constructor(start = new Vertex(), end = new Vertex())
 					{
 						this.V0.set_from_point(start);
 						this.V1.set_from_point(end);
 
 						var temp = Subtraction(end, start);
 						this.vec.set_coordinates(temp.x,temp.y);
-						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); // debug
+						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); /// debug
 						this.e_vec.set_coordinates((temp.x/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))), (temp.y/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))));
 					}
-				set_coordinates(x0,y0,x1,y1)
+				set_coordinates(x0,y0,x1,y1,z0,z1)
 					{
-						this.V0.set_coordinates(x0,y0);
-						this.V1.set_coordinates(x1,y1);
+						this.V0.set_coordinates(x0,y0,z0);
+						this.V1.set_coordinates(x1,y1,z1);
 
 						var temp = Subtraction(this.V1, this.V0);
 						this.vec = temp;
-						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); // debug
+						//console.log(Math.pow(temp.x,2) + Math.pow(temp.y,2)," | ",Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))); /// debug
 						this.e_vec.set_coordinates((temp.x/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))), (temp.y/Math.sqrt(Math.pow(temp.x,2) + Math.pow(temp.y,2))));
 					}
 			}	
 		/*
-		* @brief Класс, созданный для математического описания многоугольника
+		* Класс, созданный для математического описания многоугольника
         *
         * Максимальные границы фигуры:
 		* 
@@ -144,8 +137,8 @@
 		*/
 		class Polygon
 			{
-				begin_point = new Point() /// @param begin_point Параметр начальной точки рисования
-				last_point = new Point() /// @param end_point Параметр последней точки рисования (в конце принимает значение начатьной)
+				begin_point = new Vertex() /// @param begin_point Параметр начальной точки рисования
+				last_point = new Vertex() /// @param end_point Параметр последней точки рисования (в конце принимает значение начатьной)
 				started = false /// @param started Начато ли рисование многоугольника
 				ended = false /// @param ended Завершено ли рисование многоугольника
 				edges = [] ///  @param edges[] Грани, из которых состоит многоугольник
@@ -164,7 +157,7 @@
 						for(let index = 0; index < this.count_edges;index++)
 							{
 
-								let n = new Point((-1 * (this.edges[index].e_vec.y/(this.edges[index].e_vec.x + 0.000001))),1)
+								let n = new Vertex((-1 * (this.edges[index].e_vec.y/(this.edges[index].e_vec.x + 0.000001))),1)
 								let vec;
 								if (index == (this.count_edges - 1))
 									{
@@ -242,7 +235,7 @@
 											{
 												Draw_Line(ctx,this.last_point.x,this.last_point.y,x,y);
 
-												this.edges.push(new Line(this.last_point,new Point(x,y)));
+												this.edges.push(new Line(this.last_point,new Vertex(x,y)));
                                                 
                                                 if (y > this.y_max)
                                                     {
@@ -318,7 +311,7 @@
 							}	
 					}
 			}
-        function belongs(point = new Point(),V0,V1)
+        function belongs(point = new Vertex(),V0,V1)
             {
                 let temp = new Line(V0,point);
                 return (Svec)
@@ -345,13 +338,26 @@
                             }
                         n = (y0_2 - y0_1) / (y0_2-y1_2);
                     }
-                return new Point((x0_2 + (x1_2-x0_2)*n),(y0_2 + (y1_2-y0_2)*n));
+                return new Vertex((x0_2 + (x1_2-x0_2)*n),(y0_2 + (y1_2-y0_2)*n));
             }
     </script>
     <script>
 		var canvas = document.getElementById('canvas_1');
         var ctx = canvas.getContext('2d');
 		
+		let vertex = [];
+
+		vertex.push(new Vertex(0.0,0.0,78.0))
+		vertex.push(new Vertex(45.0,45.0,0.0))
+		vertex.push(new Vertex(45.0,-45.0,0.0))
+		vertex.push(new Vertex(-45.0,-45.0,0.0))
+		vertex.push(new Vertex(-45.0,45.0,0.0))
+		vertex.push(new Vertex(0.0,0.0,-78.0))
+
+		let Edges = [];
+
+		Edges.push(new Line())
+
 		let x = 10;
 		let y = 10;
 
@@ -379,7 +385,7 @@
 				{
                     if (((e.offsetX < poly.x_max)&&(e.offsetX > poly.x_min)) && ((e.offsetY < poly.y_max)&&(e.offsetY > poly.y_min)))
                         {
-                            lines.push(new Line(new Point(poly.x_min,e.offsetY),new Point(poly.x_max,e.offsetY)));
+                            lines.push(new Line(new Vertex(poly.x_min,e.offsetY),new Vertex(poly.x_max,e.offsetY)));
                         
                             while (lines.length > 0)
                                 {
@@ -426,17 +432,17 @@
                                     if (CurrentLine.V0.y > e.offsetY)
                                         {
                                             if (CurrentLine.V0.y + step < poly.y_max)
-                                                lines.push(new Line(new Point(poly.x_min,CurrentLine.V0.y + step),new Point(poly.x_max,CurrentLine.V0.y + step)));
+                                                lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y + step),new Vertex(poly.x_max,CurrentLine.V0.y + step)));
                                         }
                                     else if (CurrentLine.V0.y < e.offsetY)
                                         {
                                             if (CurrentLine.V0.y - step > poly.y_min)
-                                                lines.push(new Line(new Point(poly.x_min,CurrentLine.V0.y - step),new Point(poly.x_max,CurrentLine.V0.y - step)));
+                                                lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y - step),new Vertex(poly.x_max,CurrentLine.V0.y - step)));
                                         }
                                     else
                                         {
-                                            lines.push(new Line(new Point(poly.x_min,CurrentLine.V0.y + step),new Point(poly.x_max,CurrentLine.V0.y + step)));
-                                            lines.push(new Line(new Point(poly.x_min,CurrentLine.V0.y - step),new Point(poly.x_max,CurrentLine.V0.y - step)));
+                                            lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y + step),new Vertex(poly.x_max,CurrentLine.V0.y + step)));
+                                            lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y - step),new Vertex(poly.x_max,CurrentLine.V0.y - step)));
                                         }
                                 }
                         }
