@@ -83,7 +83,7 @@ class Vector {
             }
         module()
             {
-                return Math.sqrt(Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2));
+                return Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
             }
         Equal(p2)
             {
@@ -110,7 +110,7 @@ function SMultiply(vec_1, vec_2)
 */
 function angle(vec_1, vec_2)
     {
-        return Math.acos(SMultiply(vec_1,vec_2).multiply_num(vec_1.module()*vec_2.module()));
+        return Math.acos(SMultiply(vec_1,vec_2)/(vec_1.module()*vec_2.module()));
     }
 /*
 *	@brief Функция вычисления векторного произведения векторов.

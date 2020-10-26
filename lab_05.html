@@ -29,21 +29,9 @@
 						this.x = vec.x;
 						this.y = vec.y;
 					}
-				get x()
+				module()
 					{
-						return x;
-					}
-				get y()
-					{
-						return y;
-					}
-				set x(x)
-					{
-						this.x = x;	
-					}
-				set y(y)
-					{
-						this.y = y;	
+						return Math.sqrt(this.x*this.x + this.y*this.y);
 					}
 				multiply_num(num)
 					{
@@ -79,6 +67,22 @@
 		function Add(point_1 = new Point(),point_2 = new Point())
 			{
 				return new Point((point_1.x+point_2.x),(point_1.y+point_2.y))
+			}
+		/*
+		*	@brief Функция скалярного произведения векторов.
+		*
+		*	@return Угол между векторами.
+		*/
+		function angle(vec_1, vec_2)
+			{
+				return Math.acos(SMultiply(vec_1,vec_2)/(vec_1.module()*vec_2.module()));
+			}
+		/*
+		*	Функция вычисления векторного произведения векторов, возвращает число
+		*/
+		function VMultiply(point_1, point_2)
+			{   
+				return point_1.module() * point_2.module() * angle(point_1, point_2);
 			}
 		/*
 		* Класс описывающий линию, имеет начало, конец и нормали
@@ -134,7 +138,7 @@
 				started = false
 				ended = false
 				edges = []
-				count_edges = 0;
+				vertices = [] ///< Вершины, из которых состоит полигон
 
 
 				/*
@@ -143,12 +147,12 @@
 				*/
 				compute_normals()
 					{
-						for(let index = 0; index < this.count_edges;index++)
+						for(let index = 0; index < this.edges.length;index++)
 							{
 
 								let n = new Point((-1 * (this.edges[index].e_vec.y/(this.edges[index].e_vec.x + 0.000001))),1)
 								let vec;
-								if (index == (this.count_edges - 1))
+								if (index == (this.edges.length - 1))
 									{
 										vec = new Line(this.edges[index].V0,this.edges[0].V1);
 									}
@@ -169,9 +173,9 @@
 				*/
 				check()
 					{
-						let z = ((this.edges[this.count_edges - 1].V1.x - this.edges[this.count_edges - 1].V0.x)*((this.edges[0].V1.y - this.edges[0].V0.y))) - ((this.edges[this.count_edges - 1].V1.y - this.edges[this.count_edges - 1].V0.y)*((this.edges[0].V1.x - this.edges[0].V0.x)));
+						let z = ((this.edges[this.edges.length - 1].V1.x - this.edges[this.edges.length - 1].V0.x)*((this.edges[0].V1.y - this.edges[0].V0.y))) - ((this.edges[this.edges.length - 1].V1.y - this.edges[this.edges.length - 1].V0.y)*((this.edges[0].V1.x - this.edges[0].V0.x)));
 						let zi = 0;
-						for(let index = 1; index < this.count_edges;index++)	
+						for(let index = 1; index < this.edges.length;index++)	
 							{
 								zi = ((this.edges[index - 1].V1.x - this.edges[index - 1].V0.x)*((this.edges[index].V1.y - this.edges[index].V0.y))) - ((this.edges[index - 1].V1.y - this.edges[index - 1].V0.y)*((this.edges[index].V1.x - this.edges[index].V0.x)));
 								if(zi*z < 0)
@@ -196,6 +200,8 @@
 										this.last_point.x = this.begin_point.x;
 										this.last_point.y = this.begin_point.y;
 
+										this.vertices.push(new Point(x,y));
+
 										this.started = true;
 									}
 								else
@@ -211,7 +217,7 @@
 												this.last_point.x = this.begin_point.x;
 												this.last_point.y = this.begin_point.y;
 
-												this.count_edges++;
+												this.vertices.push(new Point(x,y));
 
 												this.check();
 												this.compute_normals();
@@ -224,7 +230,8 @@
 
 												this.last_point.x = x;
 												this.last_point.y = y;
-												this.count_edges++;
+												
+												this.vertices.push(new Point(x,y));
 											}
 									}
 							}
@@ -243,14 +250,35 @@
 								this.last_point.x = this.begin_point.x;
 								this.last_point.y = this.begin_point.y;
 
-								this.count_edges++;
-
 								this.check();
 								this.compute_normals();
 							}	
 					}
 				
 			}
+	function belongs(point = new Vector(),V0,V1)
+		{
+			let pline = Subtraction(point,V0); ///< Проверяемый отрезок
+			let fline = Subtraction(V1, V0); ///< Полный отрезок
+			let k = pline.x/fline.x;
+
+			if ((k >= 0) && (k<=1) && (pline.y/fline.y == k))
+				return true;
+
+			return false;
+		}
+	function inPoly(poly,point)
+		{
+			let fi = 0;
+			for (index = 0; index < poly.edges.length;index++)
+				{
+					fi += angle(Subtraction(poly.edges[index].V0,point),Subtraction(poly.edges[index].V1,point));
+				}
+			console.log(fi)
+			if (Math.abs(fi -2*Math.PI) < 0.00001)
+				return true;
+			return false;
+		}
 	</script>
 	<script>
 		var canvas = document.getElementById('canvas_1');
@@ -332,10 +360,11 @@
 							x1 = e.offsetX;
 							y1 = e.offsetY;
 							point_index = 0;
+							let belongs_polygon = true;
 
 							CurrentLine.set_coordinates(x0,y0,x1,y1);
 							// console.log("CurrentLine: ",CurrentLine); // debug
-							for(let index = 0; index < poly.count_edges;index++)
+							for(let index = 0; index < poly.edges.length;index++)
 								{
 									let Pi = SMultiply(poly.edges[index].N, CurrentLine.vec);
 									let fi = poly.edges[index].V1;
@@ -374,10 +403,13 @@
 							temp_point = Add(CurrentLine.vec);
 							temp_point.multiply_num(CurrentLine.t1)
 							let V1 = Add(CurrentLine.V0,temp_point);
+							//
+							
 							//(CurrentLine," | ",temp_point); // debug
 							CurrentLine = new Line(V0,V1);
 							ctx.fillStyle="#00FF00";
-							Draw_Line(ctx,CurrentLine.V0.x,CurrentLine.V0.y,CurrentLine.V1.x,CurrentLine.V1.y);
+							if(inPoly(poly,V0) && inPoly(poly,V1))
+								Draw_Line(ctx,CurrentLine.V0.x,CurrentLine.V0.y,CurrentLine.V1.x,CurrentLine.V1.y);
 							ctx.fillStyle="#000000";
 							// console.log(CurrentLine); // debug
 						}
