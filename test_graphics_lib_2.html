@@ -1,0 +1,76 @@
+<html>
+    <head>
+		<meta charset='utf-8'>
+		<h5 id="angles"></h5>
+		<script type="text/javascript" src="./graphics.js"></script>
+     </head>
+  <body>
+	<canvas width="1000", height="1000", id="canvas"></canvas>
+    <script>
+		var canvas = document.getElementById("canvas");
+		var ctx = canvas.getContext("2d");
+
+		let point_center = new Vector(100,50,50);
+		let d = 20;
+
+		let cube = [];
+		cube.push(new Vector(point_center.arr[0]+d, point_center.arr[1]+d, point_center.arr[2]+d));
+		cube.push(new Vector(point_center.arr[0]+d, point_center.arr[1]-d, point_center.arr[2]+d));
+		cube.push(new Vector(point_center.arr[0]+d, point_center.arr[1]+d, point_center.arr[2]-d));
+		cube.push(new Vector(point_center.arr[0]+d, point_center.arr[1]-d, point_center.arr[2]-d));
+
+		cube.push(new Vector(point_center.arr[0]-d, point_center.arr[1]+d, point_center.arr[2]+d));
+		cube.push(new Vector(point_center.arr[0]-d, point_center.arr[1]-d, point_center.arr[2]+d));
+		cube.push(new Vector(point_center.arr[0]-d, point_center.arr[1]+d, point_center.arr[2]-d));
+		cube.push(new Vector(point_center.arr[0]-d, point_center.arr[1]-d, point_center.arr[2]-d));
+
+		let alpha = 30*Math.PI/180;
+
+		let RotM = new RotationMatrix(0,0,alpha);
+		let ScaleM = new ScaleMatrix(2,0.5,3);
+		let ShiftM = new ShiftMatrix(20,40,10);
+
+		let dx = 200;
+		let dy = 200;
+		let center = new Vector(dx,dy,0);
+
+		let point_size = 4;
+		let angle = 0;
+
+		setInterval(function(){
+				angles.innerHTML = "[ " + Math.round(angle) + " ]";
+				ctx.clearRect(0,0,canvas.width, canvas.height);
+
+				angle+=0.5;
+				let rad = angle*Math.PI/180;
+				RotM = new RotationMatrix(80*Math.PI/180,rad*2,rad);
+				let ResM = MM_multiply(new ShiftMatrix(point_center.arr[0],point_center.arr[1],point_center.arr[2]),MM_multiply(RotM,new ShiftMatrix(-point_center.arr[0],-point_center.arr[1],-point_center.arr[2])));
+				ctx.fillStyle = "#000000";
+				for (let i = 0;i<cube.length;i++)
+					{
+						let pos = VM_multiply(cube[i],ResM);
+						ctx.fillRect(pos.arr[0] + dx, pos.arr[1] + dy, point_size, point_size);
+					}				
+
+				let x_line = VV_add(VM_multiply(new Vector(100,0,0),RotM),point_center);
+                ctx.fillStyle = "#00FF00";
+                Draw_Line(ctx, point_center.arr[0] + dx, point_center.arr[1] + dy, x_line.arr[0] + dx, x_line.arr[1] + dy);
+
+                let y_line = VV_add(VM_multiply(new Vector(0,100,0),RotM),point_center);
+                ctx.fillStyle = "#FF0000";
+                Draw_Line(ctx,point_center.arr[0] + dx, point_center.arr[1] + dy, y_line.arr[0] + dx, y_line.arr[1] + dy);
+
+                let z_line = VV_add(VM_multiply(new Vector(0,0,100),RotM),point_center);
+                ctx.fillStyle = "#0000FF";
+				Draw_Line(ctx, point_center.arr[0] + dx, point_center.arr[1] + dy, z_line.arr[0] + dx, z_line.arr[1] + dy);		
+			
+				if(angle == 360)
+					{
+						angle = 0;
+					}
+			},17);
+				
+	</script>
+
+  </body>
+</html>
