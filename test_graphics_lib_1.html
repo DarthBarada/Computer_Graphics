@@ -1,7 +1,7 @@
 <html>
     <head>
 		<meta charset='utf-8'>
-		<h5 id="angles"></h5>
+		<h5 id="info_angles"></h5>
 		<script type="text/javascript" src="./graphics.js"></script>
      </head>
   <body>
@@ -26,20 +26,15 @@
 		let p1 = VM_multiply(point,RotM);
 
 		ctx.fillStyle = "#000000";
-		let angle = 0;
 
-		/*for(let i = 0;i <= 360;i++)
-			{	
-				ctx.fillRect(p1.arr[0] + dx, p1.arr[1] + dy, point_size, point_size);
-				p1 = VM_multiply(p1,RotM);
-			}*/
-		
+		let rot = 0;
+
 		setInterval(function(){
-				angles.innerHTML = "[ " + angle + " ]";
+				info_angles.innerHTML = "[ " + rot + " ]";
 				ctx.clearRect(0,0,canvas.width, canvas.height);
 
-				angle++;
-				let rad = angle*Math.PI/180;
+				rot++;
+				let rad = rot*Math.PI/180;
 				RotM = new RotationMatrix(80*Math.PI/180,0,rad);
 				p1 = VM_multiply(point,RotM);
 				ctx.fillStyle = "#000000";
@@ -57,9 +52,9 @@
                 ctx.fillStyle = "#0000FF";
 				Draw_Line(ctx, dx, dy, z_line.arr[0] + dx, z_line.arr[1] + dy);		
 			
-				if(angle == 360)
+				if(rot == 360)
 					{
-						angle = 0;
+						rot = 0;
 					}
 			},30);
 				

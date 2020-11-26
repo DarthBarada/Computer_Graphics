@@ -16,9 +16,9 @@
 		let enable_rotation = false;		
 		let scene = new Scene();
 
-		let alpha = 170.0;
-		let beta = 0.0;
-		let gamma = 0.0;
+		let alpha = 120*Math.PI/180;
+		let beta = 80*Math.PI/180;
+		let gamma = 30*Math.PI/180;
 
 		scene.scale(3);
 
@@ -31,7 +31,7 @@
 				reader.readAsText(file);
 
 				reader.onload = function() {
-						scene.objects  = obj_parse(reader.result);
+						scene.object = obj_parse(reader.result);
 						ctx.clearRect(0,0,canvas.width, canvas.height);
 						
 						scene.rotate(alpha,beta,gamma);
@@ -43,13 +43,14 @@
 					console.log(reader.error);
 				};
 			}
-		ctx.clearRect(0,0,canvas.width, canvas.height);
+
+		
 		setInterval(function(){
 				if (enable_rotation)
 					{		
 						ctx.clearRect(0,0,canvas.width, canvas.height);
-						gamma += step;
-						alpha += step;
+						gamma += step/100;
+						alpha += step/10;
 						if (alpha > 360 || alpha < 0)
 							{
 								alpha = Math.abs(alpha - 360)
@@ -63,7 +64,7 @@
 								gamma = Math.abs(gamma - 360)
 							}
 						angles.innerHTML = "[ " + alpha + " | " + beta + " | "+ gamma + " ]";
-						scene.rotate(80*Math.PI/180,alpha,60);
+						scene.rotate(alpha,beta,gamma);
 						scene.draw(ctx,300,300);
 					}
 			},17);//*/
