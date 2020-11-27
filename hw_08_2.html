@@ -17,9 +17,9 @@
 		let scene = new Scene();
 
 		let alpha = 0*Math.PI/180;
-		let beta = 0*Math.PI/180;
+		let beta = 	0*Math.PI/180;
 		let gamma = 0*Math.PI/180;
-
+        let light_pos = new Vector(100,100,400);
 		scene.scale(3);
 
 		function readFile(input) 
@@ -33,10 +33,10 @@
 				reader.onload = function() {
 						scene.object = obj_parse(reader.result);
 						ctx.clearRect(0,0,canvas.width, canvas.height);
-						
-						scene.rotate(alpha,beta,gamma);
+                        
+                        scene.light_source.position = light_pos;
 						scene.draw(ctx,300,300);
-						enable_rotation = true
+                        enable_rotation = true       
 					};
 
 				reader.onerror = function() {
@@ -49,8 +49,8 @@
 				if (enable_rotation)
 					{		
 						ctx.clearRect(0,0,canvas.width, canvas.height);
-						gamma += step/100;
-						alpha += step/10;
+						gamma += step/2;
+						//alpha += step/10;
 						if (alpha > 360 || alpha < 0)
 							{
 								alpha = Math.abs(alpha - 360)
@@ -63,11 +63,14 @@
 							{
 								gamma = Math.abs(gamma - 360)
 							}
-						angles.innerHTML = "[ " + alpha + " | " + beta + " | "+ gamma + " ]";
-						scene.rotate(alpha,beta,gamma);
-						scene.draw(ctx,300,300);
+						angles.innerHTML = "[ " + Math.floor(alpha) + " | " + Math.floor(beta) + " | "+ Math.floor(gamma) + " ]";
+						let MatRot = new RotationMatrix(alpha*Math.PI/180,beta*Math.PI/180,gamma*Math.PI/180);
+						scene.light_source.position = VM_multiply(light_pos,MatRot);     
+                        scene.draw(ctx,300,300);
+                        ctx.fillStyle = "#000000";
+                        ctx.fillRect(scene.light_source.position.x()+300,scene.light_source.position.y()+300,5,5);
 					}
-			},17);	
+			},17);		
 	</script>
   </body>
 </html>

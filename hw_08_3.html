@@ -2,8 +2,8 @@
     <head>
 		<meta charset='utf-8'>
 		<input type="file" id="fileInput" multiple="false" onchange="readFile(this)"><br>
-		<h5 id="angles"></h5>
-		<script type="text/javascript" src="./graphics.js"></script>
+		<h5 id="coords"></h5>
+        <script type="text/javascript" src="./graphics.js"></script>
      </head>
   <body>
 	<canvas width="1000", height="1000", id="canvas"></canvas>
@@ -17,9 +17,9 @@
 		let scene = new Scene();
 
 		let alpha = 0*Math.PI/180;
-		let beta = 0*Math.PI/180;
+		let beta = 	0*Math.PI/180;
 		let gamma = 0*Math.PI/180;
-
+        let light_pos = new Vector(100,100,400);
 		scene.scale(3);
 
 		function readFile(input) 
@@ -33,41 +33,33 @@
 				reader.onload = function() {
 						scene.object = obj_parse(reader.result);
 						ctx.clearRect(0,0,canvas.width, canvas.height);
-						
+                        
+                        scene.light_source.position = light_pos;
 						scene.rotate(alpha,beta,gamma);
 						scene.draw(ctx,300,300);
-						enable_rotation = true
+                        enable_rotation = true       
 					};
 
 				reader.onerror = function() {
 					console.log(reader.error);
 				};
-			}
+            }
+        
+        function set_light_source_coordinates(e)
+            {
+                light_pos.set(e.pageX - e.target.offsetLeft - 300, e.pageY - e.target.offsetTop - 300, light_pos.z());
+                scene.light_source.position = light_pos; 
+                document.getElementById("coords").innerHTML = "X : " + (e.clientX - e.target.offsetLeft) + ", Y : " + (e.clientY - e.target.offsetTop);
+            } 
 
-		
 		setInterval(function(){
 				if (enable_rotation)
-					{		
-						ctx.clearRect(0,0,canvas.width, canvas.height);
-						gamma += step/100;
-						alpha += step/10;
-						if (alpha > 360 || alpha < 0)
-							{
-								alpha = Math.abs(alpha - 360)
-							}
-						if (beta > 360 || beta < 0)
-							{
-								beta = Math.abs(beta - 360)
-							}
-						if (gamma > 360 || gamma < 0)
-							{
-								gamma = Math.abs(gamma - 360)
-							}
-						angles.innerHTML = "[ " + alpha + " | " + beta + " | "+ gamma + " ]";
-						scene.rotate(alpha,beta,gamma);
-						scene.draw(ctx,300,300);
+					{		  
+                        ctx.clearRect(0,0,canvas.width, canvas.height); 
+                        scene.draw(ctx,300,300);
 					}
-			},17);	
-	</script>
+			},17);		
+    </script>
+    <body onmousemove="set_light_source_coordinates(event)"></body>
   </body>
 </html>

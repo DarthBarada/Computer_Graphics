@@ -1,53 +1,3 @@
-/*
-*   Функция рисования линии методом Брезенхема
-*/
-function Draw_Line(ctx,x0,y0,x1,y1,size=1)
-    {
-        let dy = Math.abs(y1-y0);
-        let dx = Math.abs(x1-x0);
-
-        let dmax = Math.max(dx,dy);
-        let dmin = Math.min(dx,dy);
-
-        let xdir = 1;
-        let ydir = 1;
-
-        if(x1<x0) xdir = -1;
-        if(y1<y0) ydir = -1;
-
-        let eps = 0; 
-        let k = 2*dmin;
-
-        if(dy <= dx)
-            {
-                let y = y0;
-                for(let x=x0; x*xdir<=x1*xdir;x+=xdir)
-                    {
-                        ctx.fillRect(x,y,1*size,1*size);
-                        eps = eps+k;
-                        if(eps > dmax)
-                            {
-                                y += ydir;
-                                eps = eps - 2*dmax;
-                            }
-                    }	
-            }
-        else
-            {
-                let x = x0;
-                for(let y=y0; y*ydir<=y1*ydir;y+=ydir)
-                    {
-                        ctx.fillRect(x,y,1*size,1*size);
-                        eps = eps+k;
-                        if(eps > dmax)
-                            {
-                                x += xdir;
-                                eps = eps - 2*dmax;
-                            }
-                    }	
-            }
-    }
-
 //
 ///
 /////-------------- Координаты --------------//
@@ -332,9 +282,9 @@ class Polygon
                 this.edges = [];
                 for (let index = 0; index + 1 < this.vertices.length; index++)
                     {
-                        this.edges.push(new Line(this.vertices[index],this.vertices[index + 1]))
+                        this.edges.push(new Line(this.vertices[index],this.vertices[index + 1]));
                     }
-                this.edges.push(new Line(this.vertices[this.vertices.length - 1],this.vertices[0]))
+                this.edges.push(new Line(this.vertices[this.vertices.length - 1],this.vertices[0])); 
             }	
         init_normal()
             {
@@ -385,8 +335,10 @@ class Polygon
                             }
                         else
                             {
-                                alert("Что-то пошло не так при вычислении нормалей!");
-                                location.reload();
+                                console.log();("Что-то пошло не так при вычислении нормалей!");
+                                Nz = 1.0;
+                                Ny = (B.vec.x()*A.vec.z() - B.vec.z()*A.vec.x())/(B.vec.y()*A.vec.x() - B.vec.x()*A.vec.y());
+                                Nx = (-A.vec.z() - Ny*A.vec.y())/A.vec.x();
                             }
                         this.normal.set(Nx,Ny,Nz);
                     }
@@ -429,6 +381,32 @@ class Figure
             }
     }
 
+//
+///
+/////-------------- Цвет и свет --------------//
+///
+//
+
+class Dye
+    {
+        red = 0
+        green = 0
+        blue = 0
+    }
+
+class LightSource
+    {
+        dye = new Dye()
+        position = new Coordinates()
+        constructor(){}
+    }
+
+//
+///
+/////--------------  --------------//
+///
+//
+
 /*
 *   Класс сцены
 */
@@ -446,7 +424,15 @@ class Scene
         move_y = 0.0
         move_z = 0.0
 
-        object = new Figure(); ///< Объект сцены
+        Camera_pos = new Vector (0,0,1000)
+        light_source = new LightSource()
+        object = new Figure() ///< Объект сцены
+
+        constructor()
+            {
+                this.light_source.position.set(500,250,100);
+                this.light_source.dye.red = 255;
+            }
         move(x, y=x, z=x)
             {
                 this.move_x = x;
@@ -490,37 +476,54 @@ class Scene
                 let MatMove = new ShiftMatrix(this.move_x,this.move_y,this.move_z);
                 let MatRot = new RotationMatrix(this.alpha,this.beta,this.gamma);
                 let ResultMat = MM_multiply(MatScale,MM_multiply(MatMove,MM_multiply(new ShiftMatrix(-local_pos.arr[0],-local_pos.arr[1],-local_pos.arr[2]),MM_multiply(MatRot,new ShiftMatrix(-local_pos.arr[0],-local_pos.arr[1],-local_pos.arr[2])))));
-                              
+                let is_visible = true;    
+                   
                 ctx.fillStyle = "#000000";
                 for(let index = 0; index < object.faces.length; index++)
                     {
                         let CurrentFace = object.faces[index];
-                        for (let ind_edge = 0; ind_edge < CurrentFace.edges.length; ind_edge++)
-                            {
-                                let CurrentEdge = CurrentFace.edges[ind_edge];
-                                let Result = new Line (VM_multiply(CurrentEdge.V0,ResultMat), VM_multiply(CurrentEdge.V1,ResultMat));
-                               
-                                Draw_Line(ctx, Result.V0.arr[0] + dx, Result.V0.arr[1] + dy, Result.V1.arr[0] + dx, Result.V1.arr[1] + dy);
-                            }  
-                        ctx.fillStyle = "#FF0000"
-                        let middle = VV_subtraction(CurrentFace.vertices[1], CurrentFace.vertices[2]);
-                        middle.multiply(0.5);
-                        middle = VV_add(middle,CurrentFace.vertices[2])
-                        middle = VV_subtraction(middle,CurrentFace.vertices[0]);
-                        middle.multiply(0.5);
-                        middle = VV_add(CurrentFace.vertices[0],middle);
                         let normal = copy(CurrentFace.normal);
+
                         normal.multiply(10);
+                        normal = VM_multiply(normal,ResultMat);
 
-                        let CurrentEdge = new Line(middle,VV_add(normal,middle));
+                        let view_vec = VV_subtraction(normal,this.Camera_pos);
+                        let angle_ = angle(normal,view_vec);
 
-                        let Result = new Line (VM_multiply(CurrentEdge.V0,ResultMat), VM_multiply(CurrentEdge.V1,ResultMat));
-                    
-                        Draw_Line(ctx, Result.V0.arr[0] + 300, Result.V0.arr[1] + 300, Result.V1.arr[0] + 300, Result.V1.arr[1] + 300,3);
-                        ctx.fillStyle = "#000000";
+                        if((angle_*180/Math.PI) >= 90)
+                            {
+                                is_visible = false;
+                            }
+
+                        if (is_visible)
+                            {
+                                let points = []; 
+                                for (let ind = 0; ind < CurrentFace.vertices.length; ind++)
+                                    {
+                                        let New_point = VV_add(VM_multiply(CurrentFace.vertices[ind],ResultMat),new Vector(dx,dy,0));
+                                        points.push(New_point);
+                                    } 
+
+                                ctx.beginPath(); 
+                                ctx.moveTo(points[0].x(),points[0].y());
+                                for(let i = 1; i < points.length;i++)
+                                    {
+                                        ctx.lineTo(points[i].x(),points[i].y());
+                                    }
+                                ctx.lineTo(points[0].x(),points[0].y());
+
+                                let cosa = Math.cos(angle(normal,VV_subtraction(normal,this.light_source.position)));
+                                let new_colour = "rgb(" + this.light_source.dye.red*cosa + "," + this.light_source.dye.green*cosa + "," + this.light_source.dye.blue*cosa + ")";
+                                ctx.fillStyle=new_colour;
+                                ctx.strokeStyle=new_colour;
+                                ctx.fill();
+                                ctx.stroke();
+                                
+                            } 
+                        
+                        is_visible = true;
                     }
             }
-
         }
 
 function obj_parse(text) 
