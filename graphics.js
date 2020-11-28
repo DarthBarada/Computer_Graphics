@@ -430,7 +430,7 @@ class Scene
 
         constructor()
             {
-                this.light_source.position.set(500,250,100);
+                this.light_source.position.set(0,0,500);
                 this.light_source.dye.red = 255;
             }
         move(x, y=x, z=x)
