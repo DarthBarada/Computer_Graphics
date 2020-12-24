@@ -126,12 +126,20 @@ function VV_subtraction(arg1,arg2)
         return new Vector((arg1.arr[0] - arg2.arr[0]), (arg1.arr[1] - arg2.arr[1]), (arg1.arr[2] - arg2.arr[2]));
     }
 /*
+    Функция вычисления косинуса угла между векторами.
+*/
+function cos(vec_1, vec_2)
+    {
+        return VV_multiply(vec_1,vec_2)/(vec_1.module()*vec_2.module());
+    }
+/*
     Функция вычисления угла между векторами.
 */
 function angle(vec_1, vec_2)
     {
-        return Math.acos(VV_multiply(vec_1,vec_2)/(vec_1.module()*vec_2.module()));
+        return Math.acos(cos(vec_1,vec_2));
     }
+
 
 //
 ///
@@ -372,7 +380,7 @@ class Figure
 
                                 let temp_line = new Line(middle,this.center);
                                 let num = VV_multiply(temp_line.vec,CurrentFace.normal);
-                                if (num < 0)
+                                if (num > 0)
                                     {
                                         CurrentFace.normal.multiply(-1);    
                                     }
@@ -397,6 +405,7 @@ class Dye
 class LightSource
     {
         dye = new Dye()
+        diffuse_coef = 0.0
         position = new Coordinates()
         constructor(){}
     }
@@ -431,7 +440,9 @@ class Scene
         constructor()
             {
                 this.light_source.position.set(0,0,500);
-                this.light_source.dye.red = 255;
+                this.light_source.dye.red = Math.floor(Math.random()*256);
+                this.light_source.dye.green = Math.floor(Math.random()*256);
+                this.light_source.dye.blue = Math.floor(Math.random()*256);
             }
         move(x, y=x, z=x)
             {
@@ -469,14 +480,14 @@ class Scene
 						this.gamma = this.gamma - 1*(this.gamma/Math.abs(this.gamma))*2*Math.PI + 0.000001;
                     }
             }
-        draw(ctx, dx = 250, dy = 250, object = this.object)
+        draw(ctx, dx = 250, dy = 250, object = this.object, show_normals = false)
             {
                 let local_pos = object.center;
                 let MatScale = new ScaleMatrix(this.scale_x,this.scale_y,this.scale_z);
                 let MatMove = new ShiftMatrix(this.move_x,this.move_y,this.move_z);
                 let MatRot = new RotationMatrix(this.alpha,this.beta,this.gamma);
                 let ResultMat = MM_multiply(MatScale,MM_multiply(MatMove,MM_multiply(new ShiftMatrix(-local_pos.arr[0],-local_pos.arr[1],-local_pos.arr[2]),MM_multiply(MatRot,new ShiftMatrix(-local_pos.arr[0],-local_pos.arr[1],-local_pos.arr[2])))));
-                let is_visible = true;    
+                let is_visible = true; 
                    
                 ctx.fillStyle = "#000000";
                 for(let index = 0; index < object.faces.length; index++)
@@ -488,13 +499,9 @@ class Scene
                         normal = VM_multiply(normal,ResultMat);
 
                         let view_vec = VV_subtraction(normal,this.Camera_pos);
-                        let angle_ = angle(normal,view_vec);
-
-                        if((angle_*180/Math.PI) >= 90)
-                            {
-                                is_visible = false;
-                            }
-
+                        let angle_ = VV_multiply(normal,view_vec);
+                        if(angle_> 0) is_visible = false;
+                        //console.log("angle_ = " + angle_);
                         if (is_visible)
                             {
                                 let points = []; 
@@ -512,15 +519,40 @@ class Scene
                                     }
                                 ctx.lineTo(points[0].x(),points[0].y());
 
-                                let cosa = Math.cos(angle(normal,VV_subtraction(normal,this.light_source.position)));
-                                let new_colour = "rgb(" + this.light_source.dye.red*cosa + "," + this.light_source.dye.green*cosa + "," + this.light_source.dye.blue*cosa + ")";
+                                let cosa = cos(normal,VV_subtraction(this.light_source.position,normal));
+                                if (cosa < 0) cosa = 0;
+                                //console.log("cos a = "+cosa);
+                                let R = (1-this.light_source.diffuse_coef)*this.light_source.dye.red*cosa + this.light_source.dye.red*this.light_source.diffuse_coef;
+                                let G = (1-this.light_source.diffuse_coef)*this.light_source.dye.green*cosa + this.light_source.dye.green*this.light_source.diffuse_coef;
+                                let B = (1-this.light_source.diffuse_coef)*this.light_source.dye.blue*cosa + this.light_source.dye.blue*this.light_source.diffuse_coef;
+                                let new_colour = "rgb(" + R + "," + G + "," + B + ")";
+
                                 ctx.fillStyle=new_colour;
                                 ctx.strokeStyle=new_colour;
                                 ctx.fill();
                                 ctx.stroke();
-                                
                             } 
-                        
+
+                        if(show_normals && is_visible)
+                            {
+                                let middle = VV_subtraction(CurrentFace.vertices[1], CurrentFace.vertices[2]);
+                                middle.multiply(0.5);
+                                middle = VV_add(middle,CurrentFace.vertices[2])
+                                middle = VV_subtraction(middle,CurrentFace.vertices[0]);
+                                middle.multiply(0.5);
+                                middle = VV_add(CurrentFace.vertices[0],middle);
+                                let normal = copy(CurrentFace.normal);
+                                normal.multiply(10);
+                                let CurrentNorm = new Line(middle,VV_add(normal,middle));
+                                let ResultNorm = new Line (VM_multiply(CurrentNorm.V0,ResultMat), VM_multiply(CurrentNorm.V1,ResultMat));
+                                ctx.beginPath(); 
+                                ctx.moveTo(ResultNorm.V0.arr[0] + 300, ResultNorm.V0.arr[1] + 300);
+                                ctx.lineTo(ResultNorm.V1.arr[0] + 300, ResultNorm.V1.arr[1] + 300);
+                                ctx.strokeStyle = "#FF0000"
+                                ctx.stroke();
+                                ctx.strokeStyle = "#000000";
+                            }
+
                         is_visible = true;
                     }
             }

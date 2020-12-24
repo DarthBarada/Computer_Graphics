@@ -21,6 +21,8 @@
 		let gamma = 0*Math.PI/180;
         let light_pos = new Vector(100,100,400);
 		scene.scale(3);
+		scene.light_source.diffuse_coef = 0.2;
+        scene.light_source.position.set(-200,-200,500);
 
 		function readFile(input) 
 			{
