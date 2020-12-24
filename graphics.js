@@ -1,3 +1,53 @@
+/*
+*   Функция рисования линии методом Брезенхема
+*/
+function Draw_Line(ctx,x0,y0,x1,y1,size=1)
+    {
+        let dy = Math.abs(y1-y0);
+        let dx = Math.abs(x1-x0);
+
+        let dmax = Math.max(dx,dy);
+        let dmin = Math.min(dx,dy);
+
+        let xdir = 1;
+        let ydir = 1;
+
+        if(x1<x0) xdir = -1;
+        if(y1<y0) ydir = -1;
+
+        let eps = 0; 
+        let k = 2*dmin;
+
+        if(dy <= dx)
+            {
+                let y = y0;
+                for(let x=x0; x*xdir<=x1*xdir;x+=xdir)
+                    {
+                        ctx.fillRect(x,y,1*size,1*size);
+                        eps = eps+k;
+                        if(eps > dmax)
+                            {
+                                y += ydir;
+                                eps = eps - 2*dmax;
+                            }
+                    }	
+            }
+        else
+            {
+                let x = x0;
+                for(let y=y0; y*ydir<=y1*ydir;y+=ydir)
+                    {
+                        ctx.fillRect(x,y,1*size,1*size);
+                        eps = eps+k;
+                        if(eps > dmax)
+                            {
+                                x += xdir;
+                                eps = eps - 2*dmax;
+                            }
+                    }	
+            }
+    }
+
 //
 ///
 /////-------------- Координаты --------------//
