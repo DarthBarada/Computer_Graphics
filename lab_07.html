@@ -5,7 +5,7 @@
   <body>
 	  <canvas width='1000', height='1000', id='canvas_1'></canvas>
 	<script>
-		function Draw_Line(ctx,x0,y0,x1,y1)
+		function Draw_Line(ctx, x0, y0, x1, y1, scale = 1)
 			{
 				let dy = Math.abs(y1-y0);
 				let dx = Math.abs(x1-x0);
@@ -237,6 +237,7 @@
 					}
 				print(ctx)
 					{
+						ctx.fillStyle = "#000000"; 
 						for(let index = 0; index < this.edges.length;++index)
 							{
 								Draw_Line(ctx, this.edges[index].V0.x, this.edges[index].V0.y, this.edges[index].V1.x, this.edges[index].V1.y);
@@ -567,8 +568,6 @@
 		let x = 10;
 		let y = 10;
 
-		let scale = 1;
-
 		let poly = new Polygon();
 		
         let step = 10;
@@ -581,33 +580,49 @@
 		
 		canvas.addEventListener('click',function(e){
 			if (!poly.ended) // В начале рисуем многоугольник
-				{
-					
-					ctx.fillStyle = "#000000";
+				{			
 					poly.draw_polygon(ctx,e.offsetX,e.offsetY);
-					ctx.fillStyle = "#FF0000";
 				}
 			else
 				{
 					// Простая проверка на границы
-						let dy = poly.y_max - e.offsetY;
-						let k = dy/step;
-						k = k - Math.floor(k);
-						let min_edge = poly.y_max - k*step;
-						for (let y = min_edge; y >= poly.y_min; y = y - step)
+					if (((e.offsetX < poly.x_max)&&(e.offsetX > poly.x_min)) && ((e.offsetY < poly.y_max)&&(e.offsetY > poly.y_min)))
+                        {
+							let dy = poly.y_max - e.offsetY;
+							let k = dy/step;
+							k = k - Math.floor(k);
+							let min_edge = poly.y_max - k*step;
+							ctx.fillStyle = getRandomColor();
+							for (let y = min_edge; y >= poly.y_min; y = y - step)
+								{
+									let x_arr = Array.from(cross(poly, y));
+									x_arr.sort(compareNumeric);
+									scale = 1;
+									for(let idx = 1; idx < x_arr.length; idx+=2)
+										{
+											Draw_Line(ctx,x_arr[idx-1], y, x_arr[idx], y);
+										}
+								}
+							poly.print(ctx);
+						}
+						else 
 							{
-								let x_arr = Array.from(cross(poly, y));
-								x_arr.sort(compareNumeric);
-								scale = 1;
-								for(let idx = 1; idx < x_arr.length; idx+=2)
-									{
-										Draw_Line(ctx,x_arr[idx-1], y, x_arr[idx], y);
-									}
+								alert("Точка вне зоны многоугольника!");
 							}
                 }
 		});			
     </script>
     <script>
+		function getRandomColor() 
+			{
+				var letters = '0123456789ABCDEF';
+				var color = '#';
+				for (var i = 0; i < 6; i++) 
+					{
+						color += letters[Math.floor(Math.random() * 16)];
+					}
+				return color;
+			}
     </script>
   </body>
 </html>
