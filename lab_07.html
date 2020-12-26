@@ -590,7 +590,7 @@
 			else
 				{
 					// Простая проверка на границы
-						let dy = poly.y_max - 400;
+						let dy = poly.y_max - e.offsetY;
 						let k = dy/step;
 						k = k - Math.floor(k);
 						let min_edge = poly.y_max - k*step;
