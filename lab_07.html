@@ -5,6 +5,52 @@
   <body>
 	  <canvas width='1000', height='1000', id='canvas_1'></canvas>
 	<script>
+		function Draw_Line(ctx,x0,y0,x1,y1)
+			{
+				let dy = Math.abs(y1-y0);
+				let dx = Math.abs(x1-x0);
+
+				let dmax = Math.max(dx,dy);
+				let dmin = Math.min(dx,dy);
+
+				let xdir = 1;
+				let ydir = 1;
+
+				if(x1<x0) xdir = -1;
+				if(y1<y0) ydir = -1;
+
+				let eps = 0; 
+				let k = 2*dmin;
+
+				if(dy <= dx)
+					{
+						let y = y0;
+						for(let x=x0; x*xdir<=x1*xdir;x+=xdir)
+							{
+								ctx.fillRect(x,y,1*scale,1*scale);
+								eps = eps+k;
+								if(eps > dmax)
+									{
+										y += ydir;
+										eps = eps - 2*dmax;
+									}
+							}	
+					}
+				else
+					{
+						let x = x0;
+						for(let y=y0; y*ydir<=y1*ydir;y+=ydir)
+							{
+								ctx.fillRect(x,y,1*scale,1*scale);
+								eps = eps+k;
+								if(eps > dmax)
+									{
+										x += xdir;
+										eps = eps - 2*dmax;
+									}
+							}	
+					}
+			}
 		/*
 		* Класс для описания вектора / точки, имеет координаты x и y
 		*/
@@ -32,10 +78,6 @@
 						this.x = vec.x;
 						this.y = vec.y;
 						this.z = vec.z;
-					}
-				get x()
-					{
-						return x;
 					}
 				multiply_num(num)
 					{
@@ -142,7 +184,6 @@
 				started = false /// @param started Начато ли рисование многоугольника
 				ended = false /// @param ended Завершено ли рисование многоугольника
 				edges = [] ///  @param edges[] Грани, из которых состоит многоугольник
-				count_edges = 0 /// @param count_edges Число граней
                 y_max = 0 /// @param y_max Максимальное значение по y многоуголника
                 y_min = 0 /// @param y_min Минимальное значение по y многоугольника
                 x_max = 0 /// @param x_max Максимальное значение по x многоуголника
@@ -194,7 +235,55 @@
 							}
 						return true;
 					}
+				print(ctx)
+					{
+						for(let index = 0; index < this.edges.length;++index)
+							{
+								Draw_Line(ctx, this.edges[index].V0.x, this.edges[index].V0.y, this.edges[index].V1.x, this.edges[index].V1.y);
+							}
+					}
+				sample_polygon_1(ctx)
+					{
+						this.edges.push(new Line(new Vertex(200,200),new Vertex(500,200)));
+						this.edges.push(new Line(new Vertex(500,200),new Vertex(350,400)));
+						this.edges.push(new Line(new Vertex(350,400),new Vertex(500,600)));
+						this.edges.push(new Line(new Vertex(500,600),new Vertex(200,600)));
+						this.edges.push(new Line(new Vertex(200,600),new Vertex(200,200)));
 
+						this.y_max = 600;
+						this.y_min = 200;
+						this.x_max = 500;
+						this.x_min = 200;
+
+						this.print(ctx);
+
+						this.ended = true;
+					}
+				sample_polygon_2(ctx, num)
+					{
+						this.edges.push(new Line(new Vertex(500,800), new Vertex(400,750)));
+						this.edges.push(new Line(new Vertex(400,750), new Vertex(400,650)));
+						this.edges.push(new Line(new Vertex(400,650), new Vertex(300,650)));
+						this.edges.push(new Line(new Vertex(300,650), new Vertex(250,700)));
+						this.edges.push(new Line(new Vertex(250,700), new Vertex(150,600)));
+						this.edges.push(new Line(new Vertex(150,600), new Vertex(300,200)));
+						this.edges.push(new Line(new Vertex(300,200), new Vertex(700,200)));
+						this.edges.push(new Line(new Vertex(700,200), new Vertex(950,600)));
+						this.edges.push(new Line(new Vertex(950,600), new Vertex(750,600)));
+						this.edges.push(new Line(new Vertex(750,600), new Vertex(700,500)));
+						this.edges.push(new Line(new Vertex(700,500), new Vertex(600,650)));
+						this.edges.push(new Line(new Vertex(600,650), new Vertex(550,650)));
+						this.edges.push(new Line(new Vertex(550,650), new Vertex(500,800)));
+
+						this.y_max = 800;
+						this.y_min = 200;
+						this.x_max = 950;
+						this.x_min = 150;
+
+						this.print(ctx);
+
+						this.ended = true;
+					}
 				draw_polygon(ctx,x,y)
 					{
 						if(!this.ended)
@@ -227,8 +316,6 @@
 												this.last_point.x = this.begin_point.x;
 												this.last_point.y = this.begin_point.y;
 
-												this.count_edges++;
-
 												this.compute_normals();
 											}
 										else
@@ -256,7 +343,6 @@
 
 												this.last_point.x = x;
 												this.last_point.y = y;
-												this.count_edges++;
 											}
 									}
 							}
@@ -265,189 +351,261 @@
 			}
 	</script>
     <script>
-        function Draw_Line(ctx,x0,y0,x1,y1)
+		/* 
+			Функция трассировки Суть: из точки (x_edge,y) пускается луч в направлении coef (true - право, false - лево)
+			Считается количество точек пересечения с остальными гранями. Если количество точек пересечения по модулю два 
+			равно 0, то возвращается false, иначе - true.
+		*/
+		function trace(poly, idx, y, x_edge, coef = true)
 			{
-				let dy = Math.abs(y1-y0);
-				let dx = Math.abs(x1-x0);
+				let idxr = idx - 1;
+				if (idxr < 0)
+					idxr = poly.edges.length - 1;
+				let idxl = idx + 1;
+				if (idxl > poly.edges.length)
+					idxl = 0;
 
-				let dmax = Math.max(dx,dy);
-				let dmin = Math.min(dx,dy);
+				let arr = new Set();
 
-				let xdir = 1;
-				let ydir = 1;
-
-				if(x1<x0) xdir = -1;
-				if(y1<y0) ydir = -1;
-
-				let eps = 0; 
-				let k = 2*dmin;
-
-				if(dy <= dx)
+				for(let index = 0; index < poly.edges.length;++index)
 					{
-						let y = y0;
-						for(let x=x0; x*xdir<=x1*xdir;x+=xdir)
+						if((index == idx) || (index == idxr) || (index == idxl))
+							continue;
+						
+						let line = poly.edges[index];
+						if (coef)
 							{
-								ctx.fillRect(x,y,1*scale,1*scale);
-								eps = eps+k;
-								if(eps > dmax)
+								if(x_edge <= line.V0.x || x_edge <= line.V1.x)
 									{
-										y += ydir;
-										eps = eps - 2*dmax;
+										if(line.V0.y == line.V1.y)
+											{
+												if(line.V0.y == y)
+													{
+														if(line.V0.x > line.V1.x)
+															arr.add(line.V0.x);
+														else
+															arr.add(line.V1.x);
+													}
+											}
+										else if(line.V0.x == line.V1.x) // Если линия вертикальная, то ...
+											{
+												if((line.V0.y <= y && y <= line.V1.y) || (line.V0.y >= y && y >= line.V1.y))
+													arr.add(line.V1.x);
+											}
+										else
+											{
+												let x = line.V0.x + ((line.V1.x-line.V0.x)*(y-line.V0.y)/(line.V1.y-line.V0.y));
+												if((line.V0.x <= x && x <= line.V1.x) || (line.V0.x >= x && x >= line.V1.x))
+													arr.add(x);
+											}
 									}
-							}	
-					}
-				else
-					{
-						let x = x0;
-						for(let y=y0; y*ydir<=y1*ydir;y+=ydir)
+							}
+						else
 							{
-								ctx.fillRect(x,y,1*scale,1*scale);
-								eps = eps+k;
-								if(eps > dmax)
+								if(x_edge >= line.V0.x || x_edge >= line.V1.x)
 									{
-										x += xdir;
-										eps = eps - 2*dmax;
+										if(line.V0.y == line.V1.y)
+											{
+												if(line.V0.y == y)
+													{
+														if(line.V0.x > line.V1.x)
+															arr.add(line.V1.x);
+														else
+															arr.add(line.V0.x);
+													}
+											}
+										else if(line.V0.x == line.V1.x) // Если линия вертикальная, то ...
+											{
+												if((line.V0.y <= y && y <= line.V1.y) || (line.V0.y >= y && y >= line.V1.y))
+													arr.add(line.V1.x);
+											}
+										else
+											{
+												let x = line.V0.x + ((line.V1.x-line.V0.x)*(y-line.V0.y)/(line.V1.y-line.V0.y));
+												if((line.V0.x <= x && x <= line.V1.x) || (line.V0.x >= x && x >= line.V1.x))
+													arr.add(x);
+											}
 									}
-							}	
+							}
 					}
+				if(arr.size % 2 != 0)
+					return true;
+				return false;
 			}
-        function cross(x0_1,y0_1,x1_1,y1_1,x0_2,y0_2,x1_2,y1_2)
+		function find_cross_x(poly, idx, y)
+			{
+				let line = poly.edges[idx];
+				if((line.V0.y == line.V1.y && line.V0.x == line.V1.x) || (y == poly.y_min) || (y == poly.y_max))
+					return undefined;
+
+				if(line.V0.y == line.V1.y) // Если линия горизонтальная, то ...
+					{
+						let left = line.V0.x;
+						let right = line.V1.x;
+						if(line.V0.x > line.V1.x)
+							{
+								left = line.V1.x;
+								right = line.V0.x;
+							}
+						let x_arr = [];
+						if(line.V0.y == y)
+							{
+								if(trace(poly,idx,y,right,true))
+									x_arr.push(right);
+								if(trace(poly,idx,y,left,false))
+									x_arr.push(left);
+							}
+						if(x_arr.length > 0)
+							return x_arr;
+					}
+				else if(line.V0.x == line.V1.x) // Если линия вертикальная, то ...
+					{
+						if((line.V0.y <= y && y <= line.V1.y) || (line.V0.y >= y && y >= line.V1.y))
+							return line.V0.x;
+					}
+				else	// Иначе ...
+					{
+						if((line.V0.y == y) || (line.V1.y == y))
+							{
+								let num = idx - 1;
+								if (num < 0)
+									num = poly.edges.length - 1;
+								if(poly.edges[num].V0.y == y && poly.edges[num].V1.y == y) 
+									return undefined;
+								if(poly.edges[num].V0.y == y) 
+									{
+										if(line.V0.y == y)
+											{
+												if((poly.edges[num].V1.y > y && line.V1.y > y) || (poly.edges[num].V1.y < y && line.V1.y < y))	
+													return undefined;
+											}
+										else
+											{
+												if((poly.edges[num].V1.y > y && line.V0.y > y) || (poly.edges[num].V1.y < y && line.V0.y < y))	
+													return undefined;
+											}
+									}
+								else if(poly.edges[num].V1.y == y) 
+									{
+										if(line.V0.y == y)
+												{
+													if((poly.edges[num].V0.y > y && line.V1.y > y) || (poly.edges[num].V0.y < y && line.V1.y < y))	
+														return undefined;
+												}
+											else
+												{
+													if((poly.edges[num].V0.y > y && line.V0.y > y) || (poly.edges[num].V0.y < y && line.V0.y < y))	
+														return undefined;
+												}
+										
+									}
+								num = idx + 1;
+								if (num >= poly.edges.length)
+									num = 0;
+								if(poly.edges[num].V0.y == y && poly.edges[num].V1.y == y) 
+									return undefined;
+								if(poly.edges[num].V0.y == y) 
+									{
+										if(line.V0.y == y)
+											{
+												if((poly.edges[num].V1.y > y && line.V1.y > y) || (poly.edges[num].V1.y < y && line.V1.y < y))	
+													return undefined;
+											}
+										else
+											{
+												if((poly.edges[num].V1.y > y && line.V0.y > y) || (poly.edges[num].V1.y < y && line.V0.y < y))	
+													return undefined;
+											}
+									}
+								else if(poly.edges[num].V1.y == y) 
+									{
+										if(line.V0.y == y)
+												{
+													if((poly.edges[num].V0.y > y && line.V1.y > y) || (poly.edges[num].V0.y < y && line.V1.y < y))	
+														return undefined;
+												}
+											else
+												{
+													if((poly.edges[num].V0.y > y && line.V0.y > y) || (poly.edges[num].V0.y < y && line.V0.y < y))	
+														return undefined;
+												}
+										
+									}
+							}
+						let x = line.V0.x + ((line.V1.x-line.V0.x)*(y-line.V0.y)/(line.V1.y-line.V0.y));
+						if((line.V0.x <= x && x <= line.V1.x) || (line.V0.x >= x && x >= line.V1.x))
+							return x;
+					}
+				return undefined;
+			}
+
+		function cross(poly, y)
             {
-                let n;
-                if (y1_1-y0_1 != 0)
-                    {
-                        let q = (x1_1 - x0_1)/(y0_1 - y1_1);
-                        let sn = (x0_2 - x1_2) + (y0_2 - y1_2)*q;
-                        if(sn == 0)
-                            {
-                                return undefined;
-                            }
-                        let fn = (x0_2 - x0_1) + (y0_2 - y0_1)*q;
-                        n = fn/sn;
-                    }
-                else
-                    {
-                        if(y0_2-y1_2 == 0)
-                            {
-                                return undefined;
-                            }
-                        n = (y0_2 - y0_1) / (y0_2-y1_2);
-                    }
-                return new Vertex((x0_2 + (x1_2-x0_2)*n),(y0_2 + (y1_2-y0_2)*n));
+				let x_arr = new Set();
+                for(let index = 0; index < poly.edges.length;++index)
+					{
+						let x = find_cross_x(poly, index, y);
+						if (x != undefined)
+						{
+							if(typeof x == "number")
+								x_arr.add(x);
+							else
+								for(let i = 0; i < x.length; ++i)
+									{
+										x_arr.add(x[i]);
+									}
+						}
+							
+					}
+				return x_arr;
             }
     </script>
     <script>
 		var canvas = document.getElementById('canvas_1');
         var ctx = canvas.getContext('2d');
 		
-		let vertex = [];
-
-		vertex.push(new Vertex(0.0,0.0,78.0))
-		vertex.push(new Vertex(45.0,45.0,0.0))
-		vertex.push(new Vertex(45.0,-45.0,0.0))
-		vertex.push(new Vertex(-45.0,-45.0,0.0))
-		vertex.push(new Vertex(-45.0,45.0,0.0))
-		vertex.push(new Vertex(0.0,0.0,-78.0))
-
-		let Edges = [];
-
-		Edges.push(new Line())
-
 		let x = 10;
 		let y = 10;
 
 		let scale = 1;
 
 		let poly = new Polygon();
-        let CurrentLine;
-
-        let lines = [];
-        let x_arr = [];
+		
         let step = 10;
 
         function compareNumeric(a, b) {
         if (a > b) return 1;
         if (a == b) return 0;
         if (a < b) return -1;
-        }
-
+		}
+		
 		canvas.addEventListener('click',function(e){
-			if (!poly.ended)
+			if (!poly.ended) // В начале рисуем многоугольник
 				{
+					
+					ctx.fillStyle = "#000000";
 					poly.draw_polygon(ctx,e.offsetX,e.offsetY);
+					ctx.fillStyle = "#FF0000";
 				}
 			else
 				{
-                    if (((e.offsetX < poly.x_max)&&(e.offsetX > poly.x_min)) && ((e.offsetY < poly.y_max)&&(e.offsetY > poly.y_min)))
-                        {
-                            lines.push(new Line(new Vertex(poly.x_min,e.offsetY),new Vertex(poly.x_max,e.offsetY)));
-                        
-                            while (lines.length > 0)
-                                {
-                                    CurrentLine = lines.pop();
-                                    for(let index = 0; index < poly.count_edges;index++)
-                                        {
-                                            let Temp_p = cross(CurrentLine.V0.x,CurrentLine.V0.y,CurrentLine.V1.x,CurrentLine.V1.y,poly.edges[index].V0.x,poly.edges[index].V0.y,poly.edges[index].V1.x,poly.edges[index].V1.y);
-                                            if(Temp_p != undefined)     
-                                                {
-                                                    /*ctx.fillStyle = "#0000FF";
-                                                    ctx.fillRect(Temp_p.x,Temp_p.y,2,2);// debug
-                                                    ctx.fillStyle = "#000000";*/
-                                                    if (((Temp_p.x <= poly.edges[index].V0.x) && (Temp_p.x >= poly.edges[index].V1.x))||((Temp_p.x >= poly.edges[index].V0.x) && (Temp_p.x <= poly.edges[index].V1.x)))
-                                                        {
-                                                            if (((Temp_p.y <= poly.edges[index].V0.y) && (Temp_p.y >= poly.edges[index].V1.y))||((Temp_p.y >= poly.edges[index].V0.y) && (Temp_p.y <= poly.edges[index].V1.y)))
-                                                                {
-                                                                    if (((Temp_p.y <= CurrentLine.V0.y) && (Temp_p.y >= CurrentLine.V1.y))||((Temp_p.y >= CurrentLine.V0.y) && (Temp_p.y <= CurrentLine.V1.y)))
-                                                                        {
-                                                                            if (((Temp_p.x <= CurrentLine.V0.x) && (Temp_p.x >= CurrentLine.V1.x))||((Temp_p.x >= CurrentLine.V0.x) && (Temp_p.x <= CurrentLine.V1.x)))
-                                                                                {
-                                                                                    x_arr.push(Temp_p.x);
-                                                                                }
-                                                                        }
-                                                                }
-                                                        }                      
-                                                } 
-                                        }
-                                    
-                                    /*if(x_arr.length % 2 != 0)
-                                        {
-                                            console.log("Error!Error!Error!Error!Error!Error!Error!Error!");    
-                                        }*/
-
-                                    x_arr.sort(compareNumeric);
-
-                                    scale = 1;
-                                    
-                                    for(let index = 1; index < x_arr.length;index+=2)
-                                        {
-                                            Draw_Line(ctx, x_arr[index-1], CurrentLine.V0.y, x_arr[index], CurrentLine.V1.y);
-                                        }
-                                    x_arr = [];
-
-                                    if (CurrentLine.V0.y > e.offsetY)
-                                        {
-                                            if (CurrentLine.V0.y + step < poly.y_max)
-                                                lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y + step),new Vertex(poly.x_max,CurrentLine.V0.y + step)));
-                                        }
-                                    else if (CurrentLine.V0.y < e.offsetY)
-                                        {
-                                            if (CurrentLine.V0.y - step > poly.y_min)
-                                                lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y - step),new Vertex(poly.x_max,CurrentLine.V0.y - step)));
-                                        }
-                                    else
-                                        {
-                                            lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y + step),new Vertex(poly.x_max,CurrentLine.V0.y + step)));
-                                            lines.push(new Line(new Vertex(poly.x_min,CurrentLine.V0.y - step),new Vertex(poly.x_max,CurrentLine.V0.y - step)));
-                                        }
-                                }
-                        }
-                    else 
-                        {
-                            alert("Точка вне зоны многоугольника!");
-                        }            
-				
+					// Простая проверка на границы
+						let dy = poly.y_max - 400;
+						let k = dy/step;
+						k = k - Math.floor(k);
+						let min_edge = poly.y_max - k*step;
+						for (let y = min_edge; y >= poly.y_min; y = y - step)
+							{
+								let x_arr = Array.from(cross(poly, y));
+								x_arr.sort(compareNumeric);
+								scale = 1;
+								for(let idx = 1; idx < x_arr.length; idx+=2)
+									{
+										Draw_Line(ctx,x_arr[idx-1], y, x_arr[idx], y);
+									}
+							}
                 }
-		});				
+		});			
     </script>
     <script>
     </script>
